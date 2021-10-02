@@ -1,0 +1,97 @@
+<div id="modal" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <form id="form" action="/" method="POST">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label >名稱</label>
+            <input class="form-control" id="form-name" name="name" required>
+          </div>
+          <div class="form-group">
+            <label >描述</label>
+            <textarea class="form-control" rows="3" id="form-description" name="description" required></textarea>
+          </div>
+          <div class="form-group">
+            <label >發行日期</label>
+            <input type="date" class="form-control" id="form-publish_date" name="publish_date" required>
+          </div>
+          <div class="form-group">
+            <label >價格</label>
+            <input type="number" class="form-control" id="form-price" name="price" required>
+          </div>
+          <div class="form-group">
+            <label >成本</label>
+            <input type="number" class="form-control" id="form-cost" name="cost" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <input type="submit" class="btn btn-primary" value="儲存">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% block script %}
+<script>
+window.addEventListener("load",function(event) {
+    functionButtonsBinding()
+    $('.create').click(function(){
+        $('#form-name').val('')
+        $('#form-description').val('')
+        $('#form-publish_date').val('')
+        $('#form-price').val('')
+        $('#form-cost').val('')
+        $('#form').attr('action', '/')
+        $('#modal').modal()
+    })
+    $('#bootstrap-data-table-export_paginate').click(function(){
+        functionButtonsBinding()
+    })
+
+    function functionButtonsBinding(){
+        $('.edit').click(function(){
+        let id = $(this).data('id')
+        $.ajax({
+            url: `/${id}`,
+            method: "get",
+        }).done(function( object ) {
+            var formated_date = new Date(object.publish_date)
+            var month = formated_date.getMonth() + 1
+            var date = formated_date.getDate()
+            if (month < 10){
+                month = '0' + month.toString()
+            }
+            if (date < 10){
+                date = '0' + date.toString()
+            }
+                
+            formated_date = `${formated_date.getFullYear()}-${month}-${date}`
+            $('#form-name').val(object.name)
+            $('#form-description').val(object.description)
+            $('#form-publish_date').val(formated_date)
+            $('#form-price').val(object.price)
+            $('#form-cost').val(object.cost)
+            $('#form').attr('action', `/${id}`)
+            $('#modal').modal()
+            });
+        })
+        $('.delete').click(function(){
+            let id = $(this).data('id')
+            $.ajax({
+                url: `/${id}`,
+                method: "delete",
+            }).done(function( object ) {
+                window.location.href = '/'
+            })
+        })
+    }
+},false);
+
+</script>
+{% endblock %}

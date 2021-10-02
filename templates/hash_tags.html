@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="content mt-3">
+  <div class="animated fadeIn">
+      <div class="row">
+          <div class="col-md-12">
+              <div class="card">
+                  <div class="card-header">
+                      <strong class="card-title">HashTag 管理</strong>
+                  </div>
+                  {% with danger=danger %}
+                    {% include "tools/danger.html" %}
+                  {% endwith %}
+                  <h3 class="my-3 px-4">HashTag 管理</h3>
+                  <div class="card-body">
+                    <form class="form-groups mt-3" action="/hash-tags">
+                        <select name="column">
+                            <option value="id">id</option>
+                            <option value="name">name</option>
+                        </select>
+                        <select name="condition">
+                            <option value=">">></option>
+                            <option value="<"><</option>
+                            <option value="in">in</option>
+                            <option value="between">between</option>
+                            <option value="like">like</option>
+                            <option value="is null">is null</option>
+                            <option value="=">=</option>
+                            <option value="!=">!=</option>
+                        </select>
+                        <input type="text" name="value">
+                        <button class="btn btn-success">送出</button>
+                        <a class="btn btn-warning" href="/">重設</a>
+                    </form>
+                    <table id="bootstrap-data-table-export" class="table table-striped table-bordered">
+                        <thead>
+                            <tr>
+                                <th>id</th>
+                                <th>姓名</th>
+                                <th>功能</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for row in data %}
+                            <tr>
+                                <td>{{ row['id'] }}</td>
+                                <td>{{ row['name'] }}</td>
+                                <td>
+                                    <input type="button" class="btn btn-primary edit" data-id="{{ row['id']}}" data-name="{{ row['name'] }}" value="編輯">
+                                    <input type="button" class="btn btn-danger delete" data-id="{{ row['id']}}" value="刪除">
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div><!-- .animated -->
+</div><!-- .content -->
+{% include "tools/hash_tags_modal.html" %}
+{% endblock %}

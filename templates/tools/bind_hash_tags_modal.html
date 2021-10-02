@@ -1,0 +1,114 @@
+<div id="hash-tags-modal" class="modal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <form id="hash-tags-form" action="/" method="POST">
+      <div class="modal-content">
+        <div class="modal-header">
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <h5>綁定的 HashTag</h5>
+          <div id='owned-hash-tags'  style='font-size: 18px'>
+          </div>
+
+          <h5 class='mt-4'>尚未綁定的 HashTag</h5>
+          <select id='all-hash-tags'>
+          </select>
+          <input type="button" id="all-hash-tags-submit" class='btn btn-secondary' value="新增">
+
+          <h5 class='mt-4'>新增 HashTag</h5>
+          <input name="hash-tags" id="new-hash-tags">
+          <input type="button" id="new-hash-tags-submit" class='btn btn-secondary' value="新增">
+        </div>
+        <div class="modal-footer">
+          <input type="submit" class="btn btn-primary" value="儲存">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">關閉</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% block script %}
+<script>
+window.addEventListener("load",function(event) {
+    var hashTags = [] 
+    hashTagFunctionButtonsBinding()
+    $('#bootstrap-data-table-export_paginate').click(function(){
+      hashTagFunctionButtonsBinding()
+    })
+
+    $('#all-hash-tags-submit').click(function(){
+      var selectedTag = $('#all-hash-tags').val()
+      appendOwnedHashTag(selectedTag)
+      $(`#all-hash-tags option[value='${selectedTag}']`).remove();
+    })
+
+    $('#new-hash-tags-submit').click(function(){
+      var textTag = $('#new-hash-tags').val()
+      if( hashTags.includes(textTag) ){
+        alert('已有重複 tag')
+      }
+      else{
+        appendOwnedHashTag(textTag)
+        $('#new-hash-tags').val('')
+      }
+    })
+
+
+    function hashTagFunctionButtonsBinding(){
+        $('.bind-hash-tag').click(function(){
+          let id = $(this).data('id')
+          $.ajax({
+              url: `/products/${id}/hash-tags`,
+              method: "GET",
+          }).done(function( data ) {
+            data = JSON.parse( data )
+            $("#owned-hash-tags").html('')
+            $("#all-hash-tags").html('')
+
+            var selectedHashTags = data.selected_hash_tags.map(tag => tag.name)
+            for ( var i = 0; i < selectedHashTags.length; i++ ){
+              $('#owned-hash-tags').append(`
+                <div class='d-inline'>
+                  <span class="badge badge-danger delete-hash-tag" style="font-size: 8px;"> x </span>
+                  <span class="badge badge-success">${selectedHashTags[i]}</span>
+                  <input type='checkbox' name="hash_tags" checked value="${selectedHashTags[i]}" style="display: none;">
+                </div>
+              `)
+            }
+
+            hashTags = data.hash_tags.map(tag => tag.name)
+            for ( var i = 0; i < hashTags.length; i++ ){
+              if (selectedHashTags.includes(hashTags[i])){ 
+                continue
+              }
+
+              $('#all-hash-tags').append(`
+                <option value="${hashTags[i]}">${hashTags[i]}</option>
+              `)
+            }
+            $('#hash-tags-form').attr('action', `/products/${id}/hash-tags`)
+            $('#hash-tags-modal').modal()
+          })
+        })
+
+        $('#owned-hash-tags').on('click', '.delete-hash-tag', function(){
+          $(this).parent().remove()
+        })
+    }
+
+    function appendOwnedHashTag(text){
+      $('#owned-hash-tags').append(`
+          <div class='d-inline'>
+            <span class="badge badge-danger delete-hash-tag" style="font-size: 8px;"> x </span>
+            <span class="badge badge-secondary">${text}</span>
+            <input type='checkbox' name="hash_tags" value="${text}" checked style="display: none;">
+          </div>
+        `)
+        hashTags.push(text)
+    }
+},false);
+
+</script>
+{% endblock %}

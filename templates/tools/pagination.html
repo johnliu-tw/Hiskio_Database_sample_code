@@ -1,0 +1,31 @@
+<ul class='text-center pagination'>
+  {% for number in range(1, pages + 1) %}
+    <li class="page-item">
+      <a class="page-link pagination-number" data-number={{number}}>{{ number }}</a>
+    </li>
+  {% endfor %}
+</ul>
+{% block script %}
+
+<script>
+window.onload = function() {
+    $('.pagination-number').each(function(){
+      var new_url = replaceUrlParam(window.location.href, 'page', $(this).data('number'))
+      $(this).attr('href', new_url)
+    })
+  
+    function replaceUrlParam(url, paramName, paramValue)
+    {
+        if (paramValue == null) {
+            paramValue = '';
+        }
+        var pattern = new RegExp('\\b('+paramName+'=).*?(&|#|$)');
+        if (url.search(pattern)>=0) {
+            return url.replace(pattern,'$1' + paramValue + '$2');
+        }
+        url = url.replace(/[?#]$/,'');
+        return url + (url.indexOf('?')>0 ? '&' : '?') + paramName + '=' + paramValue;
+    }
+}
+</script>
+{% endblock %}

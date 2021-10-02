@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block main %}
+<div class="content mt-3">
+  <div class="animated fadeIn">
+      <div class="row">
+          <div class="col-md-12">
+              <div class="card">
+                  <div class="card-header">
+                      <strong class="card-title">自製資料管理</strong>
+                  </div>
+                  {% with danger=danger %}
+                    {% include "tools/danger.html" %}
+                  {% endwith %}
+                  <h3 class="my-3 px-4">自製資料管理 (共 {{ count }} 筆)</h3>
+                  <div class="card-body">
+                    <form class="form-groups mt-3" action="/my-datatable">
+                        <select name="column">
+                        {% for column_name in columns %}
+                          <option value="{{ column_name }}">{{ column_name }}</option>
+                        {% endfor %}
+                        </select>
+                        <select name="condition">
+                            <option value=">">></option>
+                            <option value="<"><</option>
+                            <option value="in">in</option>
+                            <option value="between">between</option>
+                            <option value="like">like</option>
+                            <option value="is null">is null</option>
+                            <option value="=">=</option>
+                            <option value="!=">!=</option>
+                        </select>
+                        <input type="text" name="value">
+                        <button class="btn btn-success">搜尋</button>
+                        <a class="btn btn-warning" href="/my-datatable">重設</a>
+                    </form>
+                      <table class="table table-striped table-bordered">
+                          <thead>
+                              <tr>
+                                  {% for column_name in columns %}
+                                    <th>{{ column_name }}</th>
+                                  {% endfor %}
+                              </tr>
+                          </thead>
+                          <tbody>
+                            {% for row in data %}
+                              <tr>
+                                  {% for column_name in columns %}
+                                    <td>{{ row[column_name] }}</td>
+                                  {% endfor %}
+                              </tr>
+                            {% endfor %}
+                            {% for aggregate_function in aggregate_functions %}
+                            <tr>
+                              {% for column_name in columns %}
+                                {% if column_name in stas_columns %}
+                                  <td>{{ stas_result[column_name][aggregate_function] }}</td>
+                                {% else %}
+                                  <td></td>
+                                {% endif %}
+                              {% endfor %}
+                            </tr>
+                            {% endfor %}
+                          </tbody>
+                      </table>
+                      {% with pages=pages %}
+                        {% include "tools/pagination.html" %}
+                      {% endwith %}
+                  </div>
+              </div>
+          </div>
+      </div>
+  </div><!-- .animated -->
+</div><!-- .content -->
+{% block script %}
+<script>
+</script>
+{% endblock %}
+{% endblock %}
