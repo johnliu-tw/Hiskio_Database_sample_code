@@ -105,7 +105,60 @@ def delete(id):
 # L2 Sql function
 @app.route("/my-datatable", methods=["GET"])
 def my_datatable():
-    pass
+    # 顯示用資料 & 初始化變數
+    data = columns = []
+    stas_result = {}
+    count = pages = 0
+
+    # 統計用資料
+    stas_columns = ['price', 'cost']
+    aggregate_functions = ['SUM', 'AVG']
+
+    # 搜尋參數
+    column = request.args.get('column')
+    condition = request.args.get('condition')
+    value = request.args.get('value')
+
+    # 分頁參數 & 相關變數設定
+    currentPage = request.args.get('page', 1)
+    data_per_page = 3
+    offset = data_per_page * (int(currentPage) - 1)
+    pagination_condition = """limit {} offset {}""".format(data_per_page, offset)
+
+    danger = sql_protect(column, condition, value)
+    sql_condition = sql_query(column, condition, value)
+
+    if danger == False:
+        # 擷取被搜尋到的資料
+        db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+        sql = """SELECT * FROM hiskio_sql.products {} {}""".format(sql_condition, pagination_condition)
+        cursor.execute(sql)
+        data = cursor.fetchall()
+
+        # 擷取欄位資訊
+        sql = """SELECT * FROM hiskio_sql.products limit 1"""
+        cursor.execute(sql)
+        single_data = cursor.fetchone()
+        columns = single_data.keys()
+
+        # 擷取利用 SQL 函式統計( Sum, Avg )
+        for stas_column in stas_columns:
+            stas_result[stas_column] = {}
+            for aggregate_function in aggregate_functions:
+                sql = """SELECT {}({}) FROM hiskio_sql.products {}""".format(aggregate_function, stas_column, sql_condition)
+                cursor.execute(sql)
+                aggregate_result = cursor.fetchone()
+                stas_result[stas_column][aggregate_function] = float(aggregate_result["{}({})".format(aggregate_function, stas_column)])
+
+        # 擷取總個數與分頁資訊
+        sql = """SELECT COUNT(*) as result FROM hiskio_sql.products {}""".format(sql_condition)
+        cursor.execute(sql)
+        count = cursor.fetchone()['result']
+        pages = math.ceil(count/data_per_page)
+        db.close()
+
+    return render_template("my_datatable.html", data=data, columns=columns, danger=danger, count=count, pages=pages,
+                                                stas_columns=stas_columns, stas_result=stas_result, aggregate_functions=aggregate_functions)
 
 # L3 Join
 @app.route("/order-report", methods=["GET"])
