@@ -163,7 +163,39 @@ def my_datatable():
 # L3 Join
 @app.route("/order-report", methods=["GET"])
 def order_report():
-    pass
+    data = []
+    column = request.args.get('column')
+    condition = request.args.get('condition')
+    value = request.args.get('value')
+    danger = sql_protect(column, condition, value)
+    sql_condition = sql_query(column, condition, value, 'having')
+
+    if danger == False:
+        db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+        sql ="""
+            SELECT 
+                o.id AS id,
+                u.name AS user_name,
+                order_date,
+                GROUP_CONCAT(p.name) AS product_names,
+                SUM(p.price) AS total_price,
+                SUM(p.cost) AS total_cost,
+                SUM(o_i.quantity) AS total_quantity
+            FROM
+                hiskio_sql.orders AS o
+                    LEFT JOIN
+                users AS u ON o.user_id = u.id
+                    LEFT JOIN
+                order_items AS o_i ON o_i.order_id = o.id
+                    LEFT JOIN
+                products AS p ON o_i.product_id = p.id
+            GROUP BY o.id
+            {}
+            """.format(sql_condition)
+        cursor.execute(sql)
+        data = cursor.fetchall()
+        db.close()
+    return render_template("order_report.html", data=data, danger=danger)
 
 # L4 Transaction
 @app.route("/orders/<id>/shipment", methods=["POST"])
