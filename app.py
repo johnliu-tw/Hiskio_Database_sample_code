@@ -118,8 +118,8 @@ def product_bind_hash_tags(id):
     pass
 
 # Tools
-def db_init():
-    db = pymysql.connect(host='localhost', user='root', password='password', db='hiskio_sql', cursorclass=pymysql.cursors.DictCursor)
+def db_init(host, user, password, db):
+    db = pymysql.connect(host=host, user=user, password=password, db=db, cursorclass=pymysql.cursors.DictCursor)
     cursor = db.cursor(pymysql.cursors.DictCursor)
     return db, cursor
 
