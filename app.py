@@ -59,12 +59,12 @@ def create():
 def update(id):
     pass
 
-@app.route("/<id>", methods=["DELETE"])
-def delete(id):
-    pass
-
 @app.route("/<id>", methods=["GET"])
 def show(id):
+    pass
+
+@app.route("/<id>", methods=["DELETE"])
+def delete(id):
     pass
 
 # L2 Sql function
