@@ -57,11 +57,37 @@ def create():
 
 @app.route("/<id>", methods=["POST"])
 def update(id):
-    pass
+    name = request.values.get('name')
+    description = request.values.get('description')
+    publish_date = request.values.get('publish_date')
+    price = request.values.get('price')
+    cost = request.values.get('cost')
+    now = datetime.datetime.now()
+    db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+    sql = """
+            UPDATE `hiskio_sql`.`products`
+            SET `name` = '{}', `description` = '{}', `publish_date` = '{}', `price` = '{}', `cost` = '{}', `updated_at` = '{}'
+            WHERE (`id` = '{}'); 
+          """.format(name, description, publish_date, price, cost, now, id)
+    cursor.execute(sql)
+    db.commit()
+
+    sql = """SELECT * FROM hiskio_sql.products"""
+    cursor.execute(sql)
+    data = cursor.fetchall()
+
+    db.close()
+    return redirect(url_for('index', data=data, danger=False))
 
 @app.route("/<id>", methods=["GET"])
 def show(id):
-    pass
+    db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+    sql = """SELECT * FROM hiskio_sql.products WHERE id = {}""".format(id)
+    cursor.execute(sql)
+    data = cursor.fetchone()
+    db.close()
+
+    return data
 
 @app.route("/<id>", methods=["DELETE"])
 def delete(id):
