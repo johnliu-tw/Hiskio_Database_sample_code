@@ -14,7 +14,23 @@ migrate = Migrate(app, db)
 # L1 SUID
 @app.route("/", methods=["GET"])
 def index():
-    pass
+    # 設定前端參數
+    data = []
+    column = request.args.get('column')
+    condition = request.args.get('condition')
+    value = request.args.get('value')
+
+    # SQL 檢查與 Query 語句包裝
+    danger = sql_protect(column, condition, value)
+    sql_condition = sql_query(column, condition, value)
+
+    if danger == False:
+        db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+        sql = """SELECT * FROM hiskio_sql.products {}""".format(sql_condition)
+        cursor.execute(sql)
+        data = cursor.fetchall()
+        db.close()
+    return render_template('index.html', data=data, danger=danger)
 
 @app.route("/", methods=["POST"])
 def create():
@@ -118,6 +134,25 @@ def product_bind_hash_tags(id):
     pass
 
 # Tools
+def sql_query(column, condition, value, condition_text = 'where'):
+    sql_condition = ' {} '.format(condition_text)
+    if condition == 'in':
+        value = list(map(lambda item: "'{}'".format(str(item)), value.split(',')))
+        value = ','.join(value)
+        sql_condition += column + ' ' + condition + ' ({})'.format(value)
+    elif condition == 'between':
+        value = value.split(',')
+        sql_condition += column + ' ' + condition + ' "{}" and "{}"'.format(value[0], value[1])
+    elif condition == 'like':
+        sql_condition += column + ' ' + condition + ' "%{}%"'.format(value)
+    elif condition == 'is null':
+        sql_condition += column + ' ' + condition
+    elif condition == None:
+        sql_condition = ''
+    else: # =, !=, >
+        sql_condition += column + ' ' + condition + ' "{}" '.format(value)
+    return sql_condition
+
 def db_init(host, user, password, db):
     db = pymysql.connect(host=host, user=user, password=password, db=db, cursorclass=pymysql.cursors.DictCursor)
     cursor = db.cursor(pymysql.cursors.DictCursor)
