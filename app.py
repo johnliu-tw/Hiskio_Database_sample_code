@@ -34,7 +34,26 @@ def index():
 
 @app.route("/", methods=["POST"])
 def create():
-    pass
+    name = request.values.get('name')
+    description = request.values.get('description')
+    publish_date = request.values.get('publish_date')
+    price = request.values.get('price')
+    cost = request.values.get('cost')
+    now = datetime.datetime.now()
+    db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+    sql = """
+            INSERT INTO `hiskio_sql`.`products` (`name`,`description`,`publish_date`,`price`,`cost`, `created_at`, `updated_at`) 
+            VALUES ('{}', '{}', '{}', '{}', '{}', '{}', '{}');
+          """.format(name, description, publish_date, price, cost, now, now)
+    cursor.execute(sql)
+    db.commit()
+
+    sql = """SELECT * FROM hiskio_sql.products"""
+    cursor.execute(sql)
+    data = cursor.fetchall()
+
+    db.close()
+    return redirect(url_for('index', data=data, danger=False))
 
 @app.route("/<id>", methods=["POST"])
 def update(id):
