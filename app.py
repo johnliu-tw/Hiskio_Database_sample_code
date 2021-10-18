@@ -91,7 +91,16 @@ def show(id):
 
 @app.route("/<id>", methods=["DELETE"])
 def delete(id):
-    pass
+    db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+    sql = """
+            DELETE FROM `hiskio_sql`.`products`
+            WHERE (`id` = '{}'); 
+          """.format(id)
+    cursor.execute(sql)
+    db.commit()
+
+    db.close()
+    return {}
 
 # L2 Sql function
 @app.route("/my-datatable", methods=["GET"])
