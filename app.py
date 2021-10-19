@@ -226,32 +226,43 @@ def create_shipment(id):
 # L5 Hashtag
 @app.route("/products/<id>/hash-tags", methods=["GET"])
 def product_hash_tags(id):
-    hash_tags = selected_hash_tags = []
-    db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+    # hash_tags = selected_hash_tags = []
+    # db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
 
-    # 抓取關聯的中間資料
-    sql = """SELECT * FROM hiskio_sql.hash_tag_product WHERE product_id = {}""".format(id)
-    cursor.execute(sql)
-    relation_data = cursor.fetchall()
+    # # 抓取關聯的中間資料
+    # sql = """SELECT * FROM hiskio_sql.hash_tag_product WHERE product_id = {}""".format(id)
+    # cursor.execute(sql)
+    # relation_data = cursor.fetchall()
 
-    # 透過關聯抓取 hash_tags
-    items = [str(item.get('hash_tag_id')) for item in relation_data]
-    if len(items) > 0:
-        hash_tag_ids = ','.join(items)
-        sql = """SELECT * FROM hiskio_sql.hash_tags WHERE id in ({})""".format(hash_tag_ids)
-        cursor.execute(sql)
-        selected_hash_tags = cursor.fetchall()
+    # # 透過關聯抓取 hash_tags
+    # items = [str(item.get('hash_tag_id')) for item in relation_data]
+    # if len(items) > 0:
+    #     hash_tag_ids = ','.join(items)
+    #     sql = """SELECT * FROM hiskio_sql.hash_tags WHERE id in ({})""".format(hash_tag_ids)
+    #     cursor.execute(sql)
+    #     selected_hash_tags = cursor.fetchall()
 
-    # 抓取全部的 hash_tags
-    sql = """SELECT * FROM hiskio_sql.hash_tags"""
-    cursor.execute(sql)
-    hash_tags = cursor.fetchall()
-    db.close()
+    # # 抓取全部的 hash_tags
+    # sql = """SELECT * FROM hiskio_sql.hash_tags"""
+    # cursor.execute(sql)
+    # hash_tags = cursor.fetchall()
+    # db.close()
 
     # 設定資料格式
+    # data = {
+    #     'hash_tags': hash_tags,
+    #     'selected_hash_tags':  selected_hash_tags
+    # }
+
+    hash_tag_products = HashTagProductModel.query.filter(HashTagProductModel.product_id == id).all()
+
+    items = [str(item.hash_tag_id) for item in hash_tag_products]
+    if len(items) > 0:
+        selected_hash_tags = HashTagModel.query.filter(HashTagModel.id.in_(items)).all()
+    hash_tags = HashTagModel.query.all()
     data = {
-        'hash_tags': hash_tags,
-        'selected_hash_tags':  selected_hash_tags
+        'hash_tags': serialize_model(hash_tags),
+        'selected_hash_tags':  serialize_model(selected_hash_tags)
     }
     data = json.dumps(data)
     return data
