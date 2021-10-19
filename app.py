@@ -226,11 +226,97 @@ def create_shipment(id):
 # L5 Hashtag
 @app.route("/products/<id>/hash-tags", methods=["GET"])
 def product_hash_tags(id):
-    pass
+    hash_tags = selected_hash_tags = []
+    db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+
+    # 抓取關聯的中間資料
+    sql = """SELECT * FROM hiskio_sql.hash_tag_product WHERE product_id = {}""".format(id)
+    cursor.execute(sql)
+    relation_data = cursor.fetchall()
+
+    # 透過關聯抓取 hash_tags
+    items = [str(item.get('hash_tag_id')) for item in relation_data]
+    if len(items) > 0:
+        hash_tag_ids = ','.join(items)
+        sql = """SELECT * FROM hiskio_sql.hash_tags WHERE id in ({})""".format(hash_tag_ids)
+        cursor.execute(sql)
+        selected_hash_tags = cursor.fetchall()
+
+    # 抓取全部的 hash_tags
+    sql = """SELECT * FROM hiskio_sql.hash_tags"""
+    cursor.execute(sql)
+    hash_tags = cursor.fetchall()
+    db.close()
+
+    # 設定資料格式
+    data = {
+        'hash_tags': hash_tags,
+        'selected_hash_tags':  selected_hash_tags
+    }
+    data = json.dumps(data)
+    return data
 
 @app.route("/products/<id>/hash-tags", methods=["POST"])
 def product_bind_hash_tags(id):
-    pass
+    hash_tag_names = request.form.getlist('hash_tags')
+    db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+
+    try:
+        # 先刪除關聯
+        sql = """
+                DELETE FROM `hiskio_sql`.`hash_tag_product`
+                WHERE (`product_id` = '{}'); 
+            """.format(id)
+        cursor.execute(sql)
+
+        # 找出 hash_tag，找不到就建立
+        hash_tag_ids = []
+        if len(hash_tag_names) > 0:
+            for hash_tag_name in hash_tag_names:
+                sql = """SELECT * FROM hiskio_sql.hash_tags WHERE `name` = '{}'""".format(hash_tag_name)
+                print(sql)
+                cursor.execute(sql)
+                hash_tag = cursor.fetchone()
+                if hash_tag == None:
+                    sql = """
+                            INSERT INTO `hiskio_sql`.`hash_tags` (`name`) 
+                            VALUES ('{}');
+                        """.format(hash_tag_name)
+                    cursor.execute(sql)
+                    hash_tag_ids.append(str(cursor.lastrowid))
+                else:
+                    hash_tag_ids.append(str(hash_tag['id']))
+            # 建立關聯
+            for hash_tag_id in hash_tag_ids:
+                sql = """
+                        INSERT INTO `hiskio_sql`.`hash_tag_product` (`hash_tag_id`, `product_id`) 
+                        VALUES ('{}', '{}');
+                    """.format(hash_tag_id, id)
+                cursor.execute(sql)
+
+        # 刪除沒有關連的 hash_tags
+        sql = """
+                DELETE FROM `hiskio_sql`.`hash_tags` 
+                WHERE
+                    `id` IN (SELECT 
+                        id
+                    FROM
+                        (SELECT 
+                            `hash_tags`.`id`
+                        FROM
+                            `hiskio_sql`.`hash_tags`
+                        LEFT JOIN `hiskio_sql`.`hash_tag_product` ON `hash_tags`.`id` = `hash_tag_product`.`hash_tag_id`
+                        
+                        WHERE
+                            `product_id` IS NULL) AS t); 
+            """
+        cursor.execute(sql)
+        db.commit()
+    except:
+        traceback.print_exc()
+
+    db.close()
+    return redirect(url_for('index'))
 
 # L5 Hashtag sample code
 @app.route("/hash-tags", methods=["GET"])
