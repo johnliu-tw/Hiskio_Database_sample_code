@@ -200,7 +200,28 @@ def order_report():
 # L4 Transaction
 @app.route("/orders/<id>/shipment", methods=["POST"])
 def create_shipment(id):
-    pass
+    name = request.values.get('name')
+    shipment_date = request.values.get('shipment_date')
+    now = datetime.datetime.now()
+    db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
+    try:
+        sql = """
+                INSERT INTO `hiskio_sql`.`shipments` (`order_id`, `shipment_date`, `created_at`, `updated_at`
+                ) VALUES ('{}', '{}', '{}', '{}');
+            """.format(id, shipment_date, now, now)
+        cursor.execute(sql)
+
+        sql = """
+                INSERT INTO `hiskio_sql`.`shipment_companies` (`shipment_id`, `company_name`, `created_at`, `updated_at`
+                ) VALUES ('{}', '{}', '{}', '{}');
+            """.format(cursor.lastrowid, name, now, now)
+        cursor.execute(sql)
+        db.commit()
+        db.close()
+    except:
+        db.close()
+    
+    return redirect(url_for('order_report'))
 
 # L5 Hashtag sample code
 @app.route("/hash-tags", methods=["GET"])
