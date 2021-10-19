@@ -223,6 +223,15 @@ def create_shipment(id):
     
     return redirect(url_for('order_report'))
 
+# L5 Hashtag
+@app.route("/products/<id>/hash-tags", methods=["GET"])
+def product_hash_tags(id):
+    pass
+
+@app.route("/products/<id>/hash-tags", methods=["POST"])
+def product_bind_hash_tags(id):
+    pass
+
 # L5 Hashtag sample code
 @app.route("/hash-tags", methods=["GET"])
 def hash_tags():
@@ -233,46 +242,31 @@ def hash_tags():
     danger = sql_protect(column, condition, value)
     sql_condition = sql_query(column, condition, value)
     if danger == False:
-        db, cursor = db_init()
+        db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
         sql = """SELECT * FROM hiskio_sql.hash_tags {}""".format(sql_condition)
         cursor.execute(sql)
         data = cursor.fetchall()
         db.close()
     return render_template("hash_tags.html", data=data, danger=danger)
 
-@app.route("/hash-tags", methods=["POST"])
-def create_hash_tags():
-    name = request.values.get('name')
-    db, cursor = db_init()
-    sql = """
-            INSERT INTO `hiskio_sql`.`hash_tags` (`name`) VALUES ('{}');
-          """.format(name)
-    cursor.execute(sql)
-    db.commit()
-
-    get_all_from_tables(cursor, 'hash_tags')
-
-    db.close()
-    return redirect(url_for('hash_tags', data=data, danger=False))
-
 @app.route("/hash-tags/<id>", methods=["POST"])
 def update_hash_tags(id):
     name = request.values.get('name')
-    db, cursor = db_init()
+    db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
     sql = """
             UPDATE `hiskio_sql`.`hash_tags` SET `name` = '{}' WHERE (`id` = '{}'); 
           """.format(name, id)
     cursor.execute(sql)
     db.commit()
 
-    get_all_from_tables(cursor, 'hash_tags')
+    data = get_all_from_tables(cursor, 'hash_tags')
 
     db.close()
     return redirect(url_for('hash_tags', data=data, danger=False))
 
 @app.route("/hash-tags/<id>", methods=["DELETE"])
 def delete_hash_tags(id):
-    db, cursor = db_init()
+    db, cursor = db_init('localhost', 'root', 'password', 'hiskio_sql')
     sql = """
             DELETE FROM `hiskio_sql`.`hash_tags`
             WHERE (`id` = '{}'); 
@@ -283,15 +277,6 @@ def delete_hash_tags(id):
     db.close()
     return {}
 
-
-# L5 Hashtag
-@app.route("/products/<id>/hash-tags", methods=["GET"])
-def product_hash_tags(id):
-    pass
-
-@app.route("/products/<id>/hash-tags", methods=["POST"])
-def product_bind_hash_tags(id):
-    pass
 
 # Tools
 def sql_query(column, condition, value, condition_text = 'where'):
